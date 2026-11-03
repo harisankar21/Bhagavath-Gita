@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gītā · verse by verse</title>
+<meta name="description" content="All 700 verses of the Bhagavad Gita in Sanskrit, IAST and Sir Edwin Arnold's English (The Song Celestial), drawn at random one at a time.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
@@ -33,6 +34,7 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding: 40px 20px 56px;
     position:relative;
+    overflow:hidden;
   }
 
   .mandala{
@@ -147,6 +149,7 @@
     text-align:center;
     color: var(--gold-soft);
     margin: 0 0 18px;
+    white-space: pre-line;
   }
 
   .translit{
@@ -157,6 +160,7 @@
     text-align:center;
     color: var(--parchment-dim);
     margin: 0 0 28px;
+    white-space: pre-line;
   }
 
   .rule{
@@ -181,7 +185,23 @@
     text-align:center;
     color: var(--parchment);
     margin: 0;
+    white-space: pre-line;
   }
+  .translation.omitted{
+    font-style: italic;
+    font-size: 14px;
+    color: var(--parchment-dim);
+    opacity: 0.8;
+  }
+  .shared-note{
+    text-align:center;
+    margin: 14px 0 0;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--parchment-dim);
+    opacity: 0.65;
+  }
+  .shared-note:empty{ display:none; }
 
   .source-note{
     text-align:center;
@@ -280,6 +300,24 @@
     opacity:0.6;
   }
 
+  .auto-btn{
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--parchment-dim);
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .auto-btn:hover, .auto-btn:focus-visible{ border-color: var(--gold); color: var(--gold-soft); outline: none; }
+  .auto-btn[aria-pressed="true"]{ border-color: var(--gold); color: var(--gold); }
+
+  footer a{ color: var(--gold-soft); }
+
   @media (prefers-reduced-motion: reduce){
     .card, .refresh-btn svg{ transition:none; }
   }
@@ -313,7 +351,7 @@
   <header>
     <p class="eyebrow">Bhagavad Gītā</p>
     <h1>भगवद्गीता</h1>
-    <p class="sub">one verse, drawn at random, to sit with today</p>
+    <p class="sub">one of 700 verses, drawn at random, to sit with today</p>
   </header>
 
   <div class="toolbar">
@@ -341,11 +379,12 @@
     </div>
     <p class="chapter-title" id="chapter-title"></p>
     <p class="audio-note" id="audioNote"></p>
-    <p class="devanagari" id="devanagari"></p>
-    <p class="translit" id="translit"></p>
+    <p class="devanagari" id="devanagari" lang="sa"></p>
+    <p class="translit" id="translit" lang="sa-Latn"></p>
     <div class="rule"></div>
-    <p class="translation" id="translation"></p>
-    <p class="source-note">Swami Swarupananda's 1909 translation (public domain)</p>
+    <p class="translation" id="translation" lang="en"></p>
+    <p class="shared-note" id="sharedNote"></p>
+    <p class="source-note">Sir Edwin Arnold · <i>The Song Celestial</i> (1885) · public domain</p>
   </div>
 
   <div class="controls">
@@ -355,75 +394,38 @@
         <path d="M21 3v6h-6"/>
       </svg>
     </button>
-    <p class="hint">draw another verse</p>
+    <p class="hint">draw another verse · or press →</p>
+    <button class="auto-btn" id="autoBtn" type="button" aria-pressed="false">auto-rotate: off</button>
   </div>
 
   <footer>
-    Sanskrit is the ancient original, shown word-separated (padaccheda) and rendered
-    to Devanagari programmatically from IAST romanization. English is Swami
-    Swarupananda's 1909 prose translation (public domain); where the original
-    printing merged several Sanskrit verses into one English sentence, each verse
-    in that group shows the same shared translation. Currently loaded: Chapter 1
-    of 18 (47 of 700 verses) — more chapters are being added.
+    All 700 verses of the Gītā. Sanskrit is the ancient original (public domain),
+    romanized to IAST programmatically. English is Sir Edwin Arnold's verse rendering,
+    <i>The Song Celestial</i> (1885), public domain, from
+    <a href="https://www.gutenberg.org/ebooks/2388">Project Gutenberg #2388</a>.
+    Arnold's poem doesn't follow the verse numbers exactly: its lines were matched to verses by the
+    <a href="https://openartha.rittmang.xyz">OpenArtha</a> project (CC BY 4.0). He skipped 16
+    verses (1.43, 8.23–27, 13.4, 15.15, 16.23–24, 17.23–28); for those, only the Sanskrit is shown.
+    Verses are drawn at random, without repeats until you have seen them all.
   </footer>
 
 </div>
 
+<script src="verses.js"></script>
 <script>
-// Bhagavad Gita verse data
-// Sanskrit: public domain (ancient text), Devanagari generated programmatically from IAST
-// English: Swami Swarupananda's 1909 translation (public domain)
-// Currently loaded: Chapter 1 (47 verses). More chapters to follow.
-
-const verses = [
-  { chapter: 1, verse: 1, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः । मामकाः पाण्डवाश् चैव किम् अकुर्वत सञ्जय', transliteration: 'dharmakṣetre kurukṣetre samavetā yuyutsavaḥ | māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya', english: 'Tell me, O Sanjaya! Assembled on Kurukshetra, the centre of religious activity, desirous to fight, what indeed did my people and the Pandavas do?' },
-  { chapter: 1, verse: 2, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'दृष्ट्वा तु पाण्डवानीकं व्यूढं दुर्योधनस् तदा । आचार्यम् उपसङ्गम्य राजा वचनम् अब्रवीत्', transliteration: 'dṛṣṭvā tu pāṇḍavānīkaṃ vyūḍhaṃ duryodhanas tadā | ācāryam upasaṅgamya rājā vacanam abravīt', english: 'But then King Duryodhana, having seen the Pandava forces in battle-array, approached his teacher Drona, and spoke these words:' },
-  { chapter: 1, verse: 3, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'पश्यैतां पाण्डुपुत्राणाम् आचार्य महतीं चमूम् । व्यूढां द्रुपदपुत्रेण तव शिष्येण धीमता', transliteration: 'paśyaitāṃ pāṇḍuputrāṇām ācārya mahatīṃ camūm | vyūḍhāṃ drupadaputreṇa tava śiṣyeṇa dhīmatā', english: '"Behold, O Teacher! this mighty army of the sons of Pandu, arrayed by the son of Drupada, thy gifted pupil.' },
-  { chapter: 1, verse: 4, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अत्र शूरा महेष्वासा भीमार्जुनसमा युधि । युयुधानो विराटश्च द्रुपदश् च महारथः', transliteration: 'atra śūrā maheṣvāsā bhīmārjunasamā yudhi | yuyudhāno virāṭaśca drupadaś ca mahārathaḥ', english: '"Here (are) heroes, mighty archers, the equals in battle of Bhima and Arjuna-the great warriors Yuyudhana, Virata, Drupada; the valiant Dhrishtaketu, Chekitana and the king of Kashi; the best of men, Purujit, Kunti-Bhoja and Shaivya; the powerful Yudhamanyu, and the brave Uttamaujas, the son of Subhadra, and the sons of Draupadi,-lords of great chariots.' },
-  { chapter: 1, verse: 5, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'धृष्टकेतुश् चेकितानः काशिराजश् च वीर्यवान् । पुरुजित् कुन्तिभोजश् च शैब्यश् च नरपुङ्गवः', transliteration: 'dhṛṣṭaketuś cekitānaḥ kāśirājaś ca vīryavān | purujit kuntibhojaś ca śaibyaś ca narapuṅgavaḥ', english: '"Here (are) heroes, mighty archers, the equals in battle of Bhima and Arjuna-the great warriors Yuyudhana, Virata, Drupada; the valiant Dhrishtaketu, Chekitana and the king of Kashi; the best of men, Purujit, Kunti-Bhoja and Shaivya; the powerful Yudhamanyu, and the brave Uttamaujas, the son of Subhadra, and the sons of Draupadi,-lords of great chariots.' },
-  { chapter: 1, verse: 6, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'युधामन्युश् च विक्रान्त उत्तमौजाश् च वीर्यवान् । सौभद्रो द्रौपदेयाश् च सर्व एव महारथाः', transliteration: 'yudhāmanyuś ca vikrānta uttamaujāś ca vīryavān | saubhadro draupadeyāś ca sarva eva mahārathāḥ', english: '"Here (are) heroes, mighty archers, the equals in battle of Bhima and Arjuna-the great warriors Yuyudhana, Virata, Drupada; the valiant Dhrishtaketu, Chekitana and the king of Kashi; the best of men, Purujit, Kunti-Bhoja and Shaivya; the powerful Yudhamanyu, and the brave Uttamaujas, the son of Subhadra, and the sons of Draupadi,-lords of great chariots.' },
-  { chapter: 1, verse: 7, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अस्माकं तु विशिष्टा ये तान् निबोध द्विजोत्तम । नायका मम सैन्यस्य संज्ञार्थं तान् ब्रवीमि ते', transliteration: 'asmākaṃ tu viśiṣṭā ye tān nibodha dvijottama | nāyakā mama sainyasya saṃjñārthaṃ tān bravīmi te', english: '"Hear also, O Best of the twice-born! the names of those who (are) distinguished amongst ourselves, the leaders of my army. These I relate (to you) for your information.' },
-  { chapter: 1, verse: 8, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'भवान् भीष्मश् च कर्णश् च कृपश् च समितिञ्जयः । अश्वत्थामा विकर्णश् च सौमदत्तिस् तथैव च', transliteration: 'bhavān bhīṣmaś ca karṇaś ca kṛpaś ca samitiñjayaḥ | aśvatthāmā vikarṇaś ca saumadattis tathaiva ca', english: '"Yourself and Bhishma and Karna and Kripa, the victorious in war. Asvatthama and Vikarna and Jayadratha, the son of Somadatta.' },
-  { chapter: 1, verse: 9, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अन्ये च बहवः शूरा मदर्थे त्यक्तजीविताः । नानाशस्त्रप्रहरणाः सर्वे युद्धविशारदाः', transliteration: 'anye ca bahavaḥ śūrā madarthe tyaktajīvitāḥ | nānāśastrapraharaṇāḥ sarve yuddhaviśāradāḥ', english: '"And many other heroes also, well-skilled in fight, and armed with many kinds of weapons, are here, determined to lay down their lives for my sake.' },
-  { chapter: 1, verse: 10, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अपर्याप्तं तद् अस्माकं बलं भीष्माभिरक्षितम् । पर्याप्तं त्विदम् एतेषां बलं भीमाभिरक्षितम्', transliteration: 'aparyāptaṃ tad asmākaṃ balaṃ bhīṣmābhirakṣitam | paryāptaṃ tvidam eteṣāṃ balaṃ bhīmābhirakṣitam', english: '"This our army defended by Bhishma (is) impossible to be counted, but that army of theirs, defended by Bhima (is) easy to number.' },
-  { chapter: 1, verse: 11, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अयनेषु च सर्वेषु यथाभागम् अवस्थिताः । भीष्मम् एवाभिरक्षन्तु भवन्तः सर्व एव हि', transliteration: 'ayaneṣu ca sarveṣu yathābhāgam avasthitāḥ | bhīṣmam evābhirakṣantu bhavantaḥ sarva eva hi', english: '"(Now) do, being stationed in your proper places in the divisions of the army, support Bhishma alone."' },
-  { chapter: 1, verse: 12, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'तस्य सञ्जनयन् हर्षं कुरुवृद्धः पितामहः । सिंहनादं विनद्योच्छैः शङ्खं दध्मौ प्रतापवान्', transliteration: 'tasya sañjanayan harṣaṃ kuruvṛddhaḥ pitāmahaḥ | siṃhanādaṃ vinadyocchaiḥ śaṅkhaṃ dadhmau pratāpavān', english: 'That powerful, oldest of the Kurus, Bhishma the grandsire, in order to cheer Duryodhana, now sounded aloud a lion-roar and blew his conch.' },
-  { chapter: 1, verse: 13, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'ततः शङ्खाश् च भेर्यश् च पणवानकगोमुखाः । सहसैवाभ्यहन्यन्त स शब्दस् तुमुलोभवत्', transliteration: 'tataḥ śaṅkhāś ca bheryaś ca paṇavānakagomukhāḥ | sahasaivābhyahanyanta sa śabdas tumulobhavat', english: 'Then following Bhishma, conches and kettle-drums, tabors, trumpets and cowhorns blared forth suddenly from the Kaurava side and the noise was tremendous.' },
-  { chapter: 1, verse: 14, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'ततः श्वेतैर् हयैर् युक्ते महति स्यन्दने स्थितौ । माधवः पाण्डवश् चैव दिव्यौ शङ्खौ प्रदघ्मतुः', transliteration: 'tataḥ śvetair hayair yukte mahati syandane sthitau | mādhavaḥ pāṇḍavaś caiva divyau śaṅkhau pradaghmatuḥ', english: 'Then, also, Madhava and Pandava, stationed in their magnificent chariot yoked with white horses, blew their divine conches with a furious noise.' },
-  { chapter: 1, verse: 15, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'पाञ्चजन्यं हृषीकेशो देवदत्तं धनञ्जयः । पौण्ड्रं दध्मौ महाशङ्खं भीमकर्मा वृकोदरः', transliteration: 'pāñcajanyaṃ hṛṣīkeśo devadattaṃ dhanañjayaḥ | pauṇḍraṃ dadhmau mahāśaṅkhaṃ bhīmakarmā vṛkodaraḥ', english: 'Hrishikesha blew the Panchajanya, Dhananjaya, the Devadatta, and Vrikodara, the doer of terrific deeds, his large conch Paundra.' },
-  { chapter: 1, verse: 16, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अनन्तविजयं राजा कुन्तीपुत्रो युधिष्ठिरः । नकुलः सहदेवश् च सुघोषमणिपुष्पकौ', transliteration: 'anantavijayaṃ rājā kuntīputro yudhiṣṭhiraḥ | nakulaḥ sahadevaś ca sughoṣamaṇipuṣpakau', english: 'King Yudhishthira, son of Kunti, blew the conch named Anantavijaya, and Nakula and Sahadeva, their Sughosha and Manipushpaka.' },
-  { chapter: 1, verse: 17, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'काश्यश् च परमेष्वासः शिखण्डी च महारथः । धृष्टद्युम्नो विराटश् च सात्यकिश् चापराजितः', transliteration: 'kāśyaś ca parameṣvāsaḥ śikhaṇḍī ca mahārathaḥ | dhṛṣṭadyumno virāṭaś ca sātyakiś cāparājitaḥ', english: 'The expert bowman, king of Kashi, and the great warrior Shikhandi, Dhrishtadyumna and Virata and the unconquered Satyaki;' },
-  { chapter: 1, verse: 18, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'द्रुपदो द्रौपदेयाश् च सर्वशः पृथिवीपते । सौभद्रश् च महाबाहुः शङ्खान् दध्मुः पृथक्पृथक्', transliteration: 'drupado draupadeyāś ca sarvaśaḥ pṛthivīpate | saubhadraś ca mahābāhuḥ śaṅkhān dadhmuḥ pṛthakpṛthak', english: 'O Lord of Earth! Drupada and the sons of Draupadi, and the mighty-armed son of Subhadra, all, also blew each his own conch.' },
-  { chapter: 1, verse: 19, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'स घोषो धार्तराष्ट्राणां हृदयानि व्यदारयत् । नभश् च पृथिवीं चैव तुमुलोभ्यनुनादयन्', transliteration: 'sa ghoṣo dhārtarāṣṭrāṇāṃ hṛdayāni vyadārayat | nabhaś ca pṛthivīṃ caiva tumulobhyanunādayan', english: 'And the terrific noise resounding throughout heaven and earth rent the hearts of Dhritarashtra\'s party.' },
-  { chapter: 1, verse: 20, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अथ व्यवस्थितान् दृष्ट्वा धार्तराष्ट्रान् कपिध्वजः । प्रवृत्ते शस्त्रसंपाते धनुर् उद्यम्य पाण्डवः', transliteration: 'atha vyavasthitān dṛṣṭvā dhārtarāṣṭrān kapidhvajaḥ | pravṛtte śastrasaṃpāte dhanur udyamya pāṇḍavaḥ', english: 'Then, O Lord of Earth, seeing Dhritarashtra\'s party standing marshalled and the shooting about to begin, that Pandava whose ensign was the monkey, raising his bow, said the following words to Krishna:' },
-  { chapter: 1, verse: 21, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'हृषीकेशं तदा वाक्यम् इदम् आह महीपते । सेनयोर् उभयोर् मध्ये रथं स्थापय मेऽच्युत', transliteration: 'hṛṣīkeśaṃ tadā vākyam idam āha mahīpate | senayor ubhayor madhye rathaṃ sthāpaya me\'cyuta', english: 'Place my chariot, O Achyuta! between the two armies that I may see those who stand here prepared for war. On this eve of battle (let me know) with whom I have to fight.' },
-  { chapter: 1, verse: 22, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'यावद् एतान् निरिक्षेहं योद्धुकामान् अवस्थितान् । कैर् मया सह योद्धव्यम् अस्मिन् रणसमुद्यमे', transliteration: 'yāvad etān nirikṣehaṃ yoddhukāmān avasthitān | kair mayā saha yoddhavyam asmin raṇasamudyame', english: 'Place my chariot, O Achyuta! between the two armies that I may see those who stand here prepared for war. On this eve of battle (let me know) with whom I have to fight.' },
-  { chapter: 1, verse: 23, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'योत्स्यमानान् अवेक्षेहं य एतेऽत्र समागताः । धार्तराष्ट्रस्य दुर्बुद्धेर् युद्धे प्रियचिकीर्षवः', transliteration: 'yotsyamānān avekṣehaṃ ya ete\'tra samāgatāḥ | dhārtarāṣṭrasya durbuddher yuddhe priyacikīrṣavaḥ', english: 'For I desire to observe those who are assembled here for fight, wishing to please the evil-minded Duryodhana by taking his side on this battle-field.' },
-  { chapter: 1, verse: 24, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'एवम् उक्तो हृषीकेशो गुडाकेशेन भारत । सेनयोर् उभयोर् मध्ये स्थापयित्वा रथोत्तमम्', transliteration: 'evam ukto hṛṣīkeśo guḍākeśena bhārata | senayor ubhayor madhye sthāpayitvā rathottamam', english: 'Commanded thus by Gudakesha, Hrishikesha, O Bharata, drove that grandest of chariots to a place between the two hosts, facing Bhishma, Drona and all the rulers of the earth, and then spoke thus, "Behold, O Partha, all the Kurus gathered together!"' },
-  { chapter: 1, verse: 25, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'भीष्मद्रोणप्रमुखतः सर्वेषां च महीक्षिताम् । उवाच पार्थ पश्यैतान् समवेतान् कुरून् इति', transliteration: 'bhīṣmadroṇapramukhataḥ sarveṣāṃ ca mahīkṣitām | uvāca pārtha paśyaitān samavetān kurūn iti', english: 'Commanded thus by Gudakesha, Hrishikesha, O Bharata, drove that grandest of chariots to a place between the two hosts, facing Bhishma, Drona and all the rulers of the earth, and then spoke thus, "Behold, O Partha, all the Kurus gathered together!"' },
-  { chapter: 1, verse: 26, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'तत्रापश्यत् स्थितान् पार्थः पितृन् अथ पितामहान् । आचार्यान् मातुलान् भ्रातृन् पुत्रान् पौत्रान् सखींस् तथा', transliteration: 'tatrāpaśyat sthitān pārthaḥ pitṛn atha pitāmahān | ācāryān mātulān bhrātṛn putrān pautrān sakhīṃs tathā', english: 'Then saw Partha stationed there in both the armies, grandfathers, fathers-in-law and uncles, brothers and cousins, his own and their sons and grandsons, and comrades, teachers, and other friends as well.' },
-  { chapter: 1, verse: 27, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'श्वशुरान् सुहृदश् चैव सेनयोर् उभयोर् अपि । तान् समीक्ष्य स कौन्तेयः सर्वान् बन्धून् अवस्थितान्', transliteration: 'śvaśurān suhṛdaś caiva senayor ubhayor api | tān samīkṣya sa kaunteyaḥ sarvān bandhūn avasthitān', english: 'Then he, the son of Kunti, seeing all those kinsmen stationed in their ranks, spoke thus sorrowfully, filled with deep compassion. Seeing, O Krishna, these my kinsmen gathered here, eager for fight, my limbs fail me, and my mouth is parched up. I shiver all over, and my hair stands on end. The bow Gandiva slips from my hand, and my skin burns.' },
-  { chapter: 1, verse: 28, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'कृपया परयाविष्टो विषीदन्न् इदम् अब्रवीत् । दृष्ट्वेमं स्वजनं कृष्ण युयुत्सुं समुपस्थितम्', transliteration: 'kṛpayā parayāviṣṭo viṣīdann idam abravīt | dṛṣṭvemaṃ svajanaṃ kṛṣṇa yuyutsuṃ samupasthitam', english: 'Then he, the son of Kunti, seeing all those kinsmen stationed in their ranks, spoke thus sorrowfully, filled with deep compassion. Seeing, O Krishna, these my kinsmen gathered here, eager for fight, my limbs fail me, and my mouth is parched up. I shiver all over, and my hair stands on end. The bow Gandiva slips from my hand, and my skin burns.' },
-  { chapter: 1, verse: 29, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'सीदन्ति मम गात्राणि मुखं च परिशुष्यति । वेपथुश् च शरीरे मे रोमहर्षश् च जायते', transliteration: 'sīdanti mama gātrāṇi mukhaṃ ca pariśuṣyati | vepathuś ca śarīre me romaharṣaś ca jāyate', english: 'Then he, the son of Kunti, seeing all those kinsmen stationed in their ranks, spoke thus sorrowfully, filled with deep compassion. Seeing, O Krishna, these my kinsmen gathered here, eager for fight, my limbs fail me, and my mouth is parched up. I shiver all over, and my hair stands on end. The bow Gandiva slips from my hand, and my skin burns.' },
-  { chapter: 1, verse: 30, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'गाण्डीवं स्रंसते हस्तात् त्वक् चैव परिदह्यते । न च शक्नोम्य् अवस्थातुं भ्रमतीव च मे मनः', transliteration: 'gāṇḍīvaṃ sraṃsate hastāt tvak caiva paridahyate | na ca śaknomy avasthātuṃ bhramatīva ca me manaḥ', english: 'Neither, O Keshava, can I stand upright. My mind is in a whirl. And I see adverse omens.' },
-  { chapter: 1, verse: 31, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'निमित्तानि च पश्यामि विपरीतानि केशव । न च श्रेयोऽनुपश्यामि हत्वा स्वजनम् आहवे', transliteration: 'nimittāni ca paśyāmi viparītāni keśava | na ca śreyo\'nupaśyāmi hatvā svajanam āhave', english: 'Neither, O Krishna, do I see any good in killing these my own people in battle. I desire neither victory nor empire, nor yet pleasure.' },
-  { chapter: 1, verse: 32, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'न काङ्क्षे विजयं कृष्ण न च राज्यं सुखानि च । किं नो राज्येन गोविन्द किं भोगैर् जीवितेन वा', transliteration: 'na kāṅkṣe vijayaṃ kṛṣṇa na ca rājyaṃ sukhāni ca | kiṃ no rājyena govinda kiṃ bhogair jīvitena vā', english: 'Of what avail is dominion to us, of what avail are pleasures and even life, if these, O Govinda! for whose sake it is desired that empire, enjoyment and pleasure should be ours, themselves stand here in battle, having renounced life and wealth-Teachers, uncles, sons and also grandfathers, maternal uncles, fathers-in-law, grandsons, brothers-in-law, besides other kinsmen.' },
-  { chapter: 1, verse: 33, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'येषाम् अर्थे काङ्क्षितं नो राज्यं भोगाः सुखानि च । त इमेऽवस्थिता युद्धे प्राणांस् त्यक्त्वा धनानि च', transliteration: 'yeṣām arthe kāṅkṣitaṃ no rājyaṃ bhogāḥ sukhāni ca | ta ime\'vasthitā yuddhe prāṇāṃs tyaktvā dhanāni ca', english: 'Of what avail is dominion to us, of what avail are pleasures and even life, if these, O Govinda! for whose sake it is desired that empire, enjoyment and pleasure should be ours, themselves stand here in battle, having renounced life and wealth-Teachers, uncles, sons and also grandfathers, maternal uncles, fathers-in-law, grandsons, brothers-in-law, besides other kinsmen.' },
-  { chapter: 1, verse: 34, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'आचार्याः पितरः पुत्रास् तथैव च पितामहाः । मातुलाः श्वशुराः पौत्राः श्यालाः सम्बन्धिनस् तथा', transliteration: 'ācāryāḥ pitaraḥ putrās tathaiva ca pitāmahāḥ | mātulāḥ śvaśurāḥ pautrāḥ śyālāḥ sambandhinas tathā', english: 'Of what avail is dominion to us, of what avail are pleasures and even life, if these, O Govinda! for whose sake it is desired that empire, enjoyment and pleasure should be ours, themselves stand here in battle, having renounced life and wealth-Teachers, uncles, sons and also grandfathers, maternal uncles, fathers-in-law, grandsons, brothers-in-law, besides other kinsmen.' },
-  { chapter: 1, verse: 35, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'एतान् न हन्तुम् इच्छामि घ्नतोऽपि मधुसूदन । अपि त्रैलोक्यराज्यस्य हेतोः किं नु महीकृते', transliteration: 'etān na hantum icchāmi ghnato\'pi madhusūdana | api trailokyarājyasya hetoḥ kiṃ nu mahīkṛte', english: 'Even though these were to kill me, O slayer of Madhu, I could not wish to kill them, not even for the sake of dominion over the three worlds, how much less for the sake of the earth!' },
-  { chapter: 1, verse: 36, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'निहत्य धार्तराष्ट्रान् नः का प्रीतिः स्याज् जनार्दन । पापम् एवाश्रयेद् अस्मान् हत्वैतान् आततायिनः', transliteration: 'nihatya dhārtarāṣṭrān naḥ kā prītiḥ syāj janārdana | pāpam evāśrayed asmān hatvaitān ātatāyinaḥ', english: 'What pleasure indeed could be ours, O Jnanardana, from killing these sons of Dhritarashtra? Sin only could take hold of us by the slaying of these felons.' },
-  { chapter: 1, verse: 37, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'तस्मान् नार्हा वयं हन्तुं धार्तराष्ट्रान् स्वबान्धवान् । स्वजनं हि कथं हत्वा सुखिनः स्याम माधव', transliteration: 'tasmān nārhā vayaṃ hantuṃ dhārtarāṣṭrān svabāndhavān | svajanaṃ hi kathaṃ hatvā sukhinaḥ syāma mādhava', english: 'Therefore ought we not to kill our kindred, the sons of Dhritarashtra. For how could we, O Madhava, gain happiness by the slaying of our own kinsmen?' },
-  { chapter: 1, verse: 38, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'यद्यप्येते न पश्यन्ति लोभोपहतचेतसः । कुलक्षयकृतं दोषं मित्रद्रोहे च पातकम्', transliteration: 'yadyapyete na paśyanti lobhopahatacetasaḥ | kulakṣayakṛtaṃ doṣaṃ mitradrohe ca pātakam', english: 'Though these, with understanding overpowered by greed, see no evil due to decay of families, and no sin in hostility to friends, why should we, O Janardana, who see clearly the evil due to the decay of families, not turn away from this sin?' },
-  { chapter: 1, verse: 39, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'कथं न ज्ञेयम् अस्माभिः पापाद् अस्मान् निवर्तितुम् । कुलक्षयकृतं दोषं प्रपश्यद्भिर् जनार्दन', transliteration: 'kathaṃ na jñeyam asmābhiḥ pāpād asmān nivartitum | kulakṣayakṛtaṃ doṣaṃ prapaśyadbhir janārdana', english: 'Though these, with understanding overpowered by greed, see no evil due to decay of families, and no sin in hostility to friends, why should we, O Janardana, who see clearly the evil due to the decay of families, not turn away from this sin?' },
-  { chapter: 1, verse: 40, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'कुलक्षये प्रणश्यन्ति कुलधर्माः सनातनाः । धर्मे नष्टे कुलं कृत्स्नम् अधर्मोऽभिभवत्य् उत', transliteration: 'kulakṣaye praṇaśyanti kuladharmāḥ sanātanāḥ | dharme naṣṭe kulaṃ kṛtsnam adharmo\'bhibhavaty uta', english: 'On the decay of a family the immemorial religious rites of that family die out. On the destruction of spirituality, impiety further overwhelms the whole of the family.' },
-  { chapter: 1, verse: 41, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अधर्माभिभवात् कृष्ण प्रदुष्यन्ति कुलस्त्रियः । स्त्रीषु दुष्टासु वार्ष्णेय जायते वर्णसङ्करः', transliteration: 'adharmābhibhavāt kṛṣṇa praduṣyanti kulastriyaḥ | strīṣu duṣṭāsu vārṣṇeya jāyate varṇasaṅkaraḥ', english: 'On the prevalence of impiety, O Krishna, the women of the family become corrupt; and women being corrupted, there arises, O Varshneya, intermingling of castes.' },
-  { chapter: 1, verse: 42, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'सङ्करो नरकायैव कुलघ्नानां कुलस्य च । पतन्ति पितरो ह्य् एषां लुप्तपिण्डोदकक्रियाः', transliteration: 'saṅkaro narakāyaiva kulaghnānāṃ kulasya ca | patanti pitaro hy eṣāṃ luptapiṇḍodakakriyāḥ', english: 'Admixture of castes, indeed, is for the hell of the family and the destroyers of the family; their ancestors fall, deprived of the offerings of rice-ball and water.' },
-  { chapter: 1, verse: 43, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'दोषैर् एतैः कुलघ्नानां वर्णसङ्करकारकैः । उत्साद्यन्ते जातिधर्माः कुलधर्माश् च शाश्वताः', transliteration: 'doṣair etaiḥ kulaghnānāṃ varṇasaṅkarakārakaiḥ | utsādyante jātidharmāḥ kuladharmāś ca śāśvatāḥ', english: 'By these misdeeds of the destroyers of the family, bringing about confusion of castes, are the immemorial religious rites of the caste and the family destroyed.' },
-  { chapter: 1, verse: 44, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'उत्सन्नकुलधर्माणां मनुष्याणां जनार्दन । नरके नियतं वासो भवतीत्य् अनुशुश्रुम', transliteration: 'utsannakuladharmāṇāṃ manuṣyāṇāṃ janārdana | narake niyataṃ vāso bhavatīty anuśuśruma', english: 'We have heard, O Janardana, that inevitable is the dwelling in hell of those men in whose families religious practices have been destroyed.' },
-  { chapter: 1, verse: 45, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'अहो बत महत् पापं कर्तुं व्यवसिता वयम् । यद् राज्यसुखलोभेन हन्तुं स्वजनम् उद्यताः', transliteration: 'aho bata mahat pāpaṃ kartuṃ vyavasitā vayam | yad rājyasukhalobhena hantuṃ svajanam udyatāḥ', english: 'Alas, we are involved in a great sin, in that we are prepared to slay our kinsmen, from greed of the pleasures of a kingdom!' },
-  { chapter: 1, verse: 46, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'यदि माम् अप्रतीकारम् अशस्त्रं शस्त्रपाणयः । धार्तराष्ट्रा रणे हन्युस् तन् मे क्षेमतरं भवेत्', transliteration: 'yadi mām apratīkāram aśastraṃ śastrapāṇayaḥ | dhārtarāṣṭrā raṇe hanyus tan me kṣemataraṃ bhavet', english: 'Verily, if the sons of Dhritarashtra, weapons in hand, were to slay me, unresisting and unarmed, in the battle, that would be better for me.' },
-  { chapter: 1, verse: 47, chapterTitle: 'Arjuna Vishada Yoga — The Grief of Arjuna', devanagari: 'एवम् उक्त्वार्जुनः सङ्ख्ये रथोपस्थ उपाविशत् । विसृज्य सशरं चापं शोकसंविग्नमानसः', transliteration: 'evam uktvārjunaḥ saṅkhye rathopastha upāviśat | visṛjya saśaraṃ cāpaṃ śokasaṃvignamānasaḥ', english: 'Speaking thus in the midst of the battle-field, Arjuna casting away his bow and arrows, sank down on the seat of his chariot, with his mind distressed with sorrow.' },
-];
+  // Data comes from verses.js (generated by scripts/build_verses.py):
+  //   window.GITA_VERSES   = [{ c: chapter, v: verse, d: devanagari, t: IAST, e: Arnold's English, g?: shared group }]
+  //   window.GITA_CHAPTERS = { 1: { name, title }, ... }  (Arnold's own chapter titles)
+  const CHAPTERS = window.GITA_CHAPTERS;
+  const verses = window.GITA_VERSES.map(x => ({
+    chapter: x.c,
+    verse: x.v,
+    chapterTitle: `${CHAPTERS[x.c].name} — ${CHAPTERS[x.c].title}`,
+    devanagari: x.d,
+    transliteration: x.t,
+    english: x.e,
+    group: x.g || null,
+  }));
 
   // Draw radial spokes for the mandala background
   (function drawSpokes(){
@@ -431,13 +433,9 @@ const verses = [
     const cx = 450, cy = 450, rInner = 150, rOuter = 430;
     for(let i=0;i<24;i++){
       const angle = (i/24) * Math.PI * 2;
-      const x1 = cx + rInner*Math.cos(angle);
-      const y1 = cy + rInner*Math.sin(angle);
-      const x2 = cx + rOuter*Math.cos(angle);
-      const y2 = cy + rOuter*Math.sin(angle);
       const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('x1', cx + rInner*Math.cos(angle)); line.setAttribute('y1', cy + rInner*Math.sin(angle));
+      line.setAttribute('x2', cx + rOuter*Math.cos(angle)); line.setAttribute('y2', cy + rOuter*Math.sin(angle));
       line.setAttribute('class','spoke');
       g.appendChild(line);
     }
@@ -446,6 +444,7 @@ const verses = [
   const devEl = document.getElementById('devanagari');
   const translitEl = document.getElementById('translit');
   const enEl = document.getElementById('translation');
+  const sharedEl = document.getElementById('sharedNote');
   const locusEl = document.getElementById('locus-text');
   const chapterTitleEl = document.getElementById('chapter-title');
   const card = document.getElementById('card');
@@ -454,9 +453,65 @@ const verses = [
   const verseCountEl = document.getElementById('verseCount');
   const audioBtn = document.getElementById('audioBtn');
   const audioNote = document.getElementById('audioNote');
+  const autoBtn = document.getElementById('autoBtn');
 
   let activeSet = verses;
-  let lastIndex = -1;
+  let current = null;       // verse object currently on screen
+
+  // ---- Safe storage (private windows can throw) ----
+  const store = {
+    get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  };
+
+  // ---- True randomness + shuffle bag ----
+  // Uses the browser's cryptographic random generator (not Math.random) and a
+  // shuffled "deck": every verse in view appears exactly once, in random order,
+  // before any verse repeats. The deck is remembered between visits, so each
+  // visit continues through verses you haven't seen yet.
+  function randomInt(n){
+    if(window.crypto && crypto.getRandomValues){
+      const buf = new Uint32Array(1);
+      const limit = Math.floor(0x100000000 / n) * n;   // rejection sampling: no modulo bias
+      do { crypto.getRandomValues(buf); } while(buf[0] >= limit);
+      return buf[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+
+  function shuffled(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = randomInt(i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const keyOf = v => `${v.chapter}.${v.verse}`;
+  const deckKey = () => `gita-deck:${chapterFilter.value}`;
+
+  function drawFromDeck(){
+    const valid = new Set(activeSet.map(keyOf));
+    let deck = (store.get(deckKey()) || []).filter(k => valid.has(k));
+    if(deck.length === 0){
+      deck = shuffled([...valid]);
+      // never show the same verse twice in a row across a reshuffle
+      if(current && deck.length > 1 && deck[deck.length - 1] === keyOf(current)){
+        const j = randomInt(deck.length - 1);
+        [deck[deck.length - 1], deck[j]] = [deck[j], deck[deck.length - 1]];
+      }
+    }
+    const k = deck.pop();
+    store.set(deckKey(), deck);
+    updateCount(deck.length);
+    return activeSet.find(v => keyOf(v) === k);
+  }
+
+  function updateCount(left){
+    const n = activeSet.length;
+    verseCountEl.textContent = `${n} verses · ${left} unseen this cycle`;
+  }
 
   // ---- Audio (browser text-to-speech reading the Devanagari) ----
   // There's no authentic chanting recording bundled here — this uses the
@@ -502,9 +557,8 @@ const verses = [
       stopSpeaking();
       return;
     }
-    const verse = activeSet[lastIndex];
-    if(!verse) return;
-    const utter = new SpeechSynthesisUtterance(verse.devanagari);
+    if(!current) return;
+    const utter = new SpeechSynthesisUtterance(current.devanagari);
     const voice = pickVoice();
     if(voice) utter.voice = voice;
     utter.lang = voice ? voice.lang : 'hi-IN';
@@ -528,68 +582,122 @@ const verses = [
   }
 
   function buildChapterFilter(){
-    const chapters = [...new Set(verses.map(v => v.chapter))].sort((a,b) => a-b);
     const allOpt = document.createElement('option');
     allOpt.value = 'all';
-    allOpt.textContent = `All loaded chapters (${verses.length} verses)`;
+    allOpt.textContent = `All 18 chapters (${verses.length} verses)`;
     chapterFilter.appendChild(allOpt);
-    chapters.forEach(ch => {
-      const title = verses.find(v => v.chapter === ch).chapterTitle;
+    for(let ch = 1; ch <= 18; ch++){
       const opt = document.createElement('option');
       opt.value = ch;
       const count = verses.filter(v => v.chapter === ch).length;
-      opt.textContent = `Chapter ${ch} — ${title.split('—')[0].trim()} (${count})`;
+      opt.textContent = `Chapter ${ch} — ${CHAPTERS[ch].name} (${count})`;
       chapterFilter.appendChild(opt);
-    });
+    }
+    const saved = store.get('gita-filter');
+    if(saved && chapterFilter.querySelector(`option[value="${saved}"]`)) chapterFilter.value = saved;
+  }
+
+  function setActiveSet(){
+    const val = chapterFilter.value;
+    activeSet = val === 'all' ? verses : verses.filter(v => String(v.chapter) === val);
   }
 
   function applyFilter(){
     stopSpeaking();
-    const val = chapterFilter.value;
-    activeSet = val === 'all' ? verses : verses.filter(v => String(v.chapter) === val);
-    verseCountEl.textContent = `${activeSet.length} verse${activeSet.length === 1 ? '' : 's'} in view`;
-    lastIndex = -1;
-    showNext(true);
+    store.set('gita-filter', chapterFilter.value);
+    setActiveSet();
+    show(drawFromDeck(), true);
   }
 
-  function pickIndex(){
-    if(activeSet.length === 1) return 0;
-    let i;
-    do { i = Math.floor(Math.random() * activeSet.length); } while(i === lastIndex);
-    return i;
-  }
-
-  function render(i){
-    const v = activeSet[i];
+  function render(v){
     locusEl.textContent = `Chapter ${v.chapter} · Verse ${v.verse}`;
     chapterTitleEl.textContent = v.chapterTitle;
     devEl.textContent = v.devanagari;
     translitEl.textContent = v.transliteration;
-    enEl.textContent = v.english;
+    if(v.english){
+      enEl.textContent = v.english;
+      enEl.classList.remove('omitted');
+    } else {
+      enEl.textContent = 'Arnold left this verse out of The Song Celestial, so only the Sanskrit is shown here.';
+      enEl.classList.add('omitted');
+    }
+    if(v.group && v.english){
+      const others = v.group.filter(n => n !== v.verse).map(n => `${v.chapter}.${n}`).join(', ');
+      sharedEl.textContent = `Arnold renders this verse together with ${others} in one passage.`;
+    } else {
+      sharedEl.textContent = '';
+    }
+    try { history.replaceState(null, '', '#' + keyOf(v)); } catch(e){}
+    document.title = `Gītā ${keyOf(v)} · verse by verse`;
   }
 
-  function showNext(immediate){
+  function show(v, immediate){
     stopSpeaking();
-    const i = pickIndex();
-    lastIndex = i;
+    current = v;
     if(immediate){
-      render(i);
+      render(v);
       return;
     }
     card.classList.add('fade');
     btn.classList.add('spin');
     setTimeout(() => {
-      render(i);
+      render(v);
       card.classList.remove('fade');
     }, 220);
     setTimeout(() => btn.classList.remove('spin'), 600);
   }
 
+  function showNext(){
+    show(drawFromDeck(), false);
+  }
+
+  // ---- Auto-rotate: draw a new random verse every few seconds ----
+  const AUTO_MS = 20000;
+  let autoTimer = null;
+
+  function setAuto(on){
+    clearInterval(autoTimer);
+    autoTimer = null;
+    if(on){
+      autoTimer = setInterval(() => {
+        if(document.hidden) return;                                 // don't rotate in a background tab
+        if(speechSupported && window.speechSynthesis.speaking) return; // let audio finish
+        showNext();
+      }, AUTO_MS);
+    }
+    autoBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    autoBtn.textContent = on ? `auto-rotate: on · every ${AUTO_MS/1000}s` : 'auto-rotate: off';
+    store.set('gita-auto', on);
+  }
+
+  // Deep link: index.html#2.47 opens that verse
+  function verseFromHash(){
+    const m = /^#(\d+)\.(\d+)$/.exec(location.hash);
+    if(!m) return null;
+    return verses.find(v => v.chapter === +m[1] && v.verse === +m[2]) || null;
+  }
+
   buildChapterFilter();
-  applyFilter();
+  setActiveSet();
+  const linked = verseFromHash();
+  if(linked){
+    if(!activeSet.includes(linked)){ chapterFilter.value = 'all'; setActiveSet(); }
+    updateCount((store.get(deckKey()) || []).length || activeSet.length);
+    show(linked, true);
+  } else {
+    show(drawFromDeck(), true);
+  }
   initAudioControl();
+  setAuto(store.get('gita-auto') === true);
+
   chapterFilter.addEventListener('change', applyFilter);
-  btn.addEventListener('click', () => showNext(false));
+  btn.addEventListener('click', showNext);
+  autoBtn.addEventListener('click', () => setAuto(!autoTimer));
+  window.addEventListener('hashchange', () => { const v = verseFromHash(); if(v && v !== current) show(v, false); });
+  document.addEventListener('keydown', e => {
+    if(e.target.closest('select, button, input, textarea')) return;
+    if(e.key === 'ArrowRight' || e.key === 'n'){ e.preventDefault(); showNext(); }
+  });
 </script>
 
 </body>
